@@ -1,7 +1,7 @@
 # DIY-Head-Tracker
 Head tracker for RC FPV purposes. Project father: Denis Frie
 
-Please see ChangeLog.txt and .docx files for more info.
+Please see ChangeLog.txt, HeadTrackerFW.ino and .docx files for more info.
 The purpose of this repository is to make stable platform for future development of the great work started by Denis Frie.
 
 ## Discussion
