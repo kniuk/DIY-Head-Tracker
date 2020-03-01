@@ -19,5 +19,5 @@ http://www.rcgroups.com/forums/showthread.php?t=1677559
 ## Colaboration
 Colaborators welcome, please feel free to contact https://github.com/kniuk
 
-## Archive
-Check archive folder for previous versions
+## Archive (previous versions)
+https://github.com/kniuk/DIY-Head-Tracker/tree/master/archive
