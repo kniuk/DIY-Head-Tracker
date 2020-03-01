@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="DIY_headtracker\config.h" />
+    <ClInclude Include="DIY_headtracker\functions.h" />
+    <ClInclude Include="DIY_headtracker\sensors.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DIY_headtracker\functions.cpp" />
+    <ClCompile Include="DIY_headtracker\sensors.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DIY_headtracker\DIY_headtracker.ino" />
+  </ItemGroup>
+</Project>

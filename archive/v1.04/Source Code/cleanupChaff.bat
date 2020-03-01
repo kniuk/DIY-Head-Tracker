@@ -1,0 +1,1 @@
+del /s *.suo *.tlog *.pdb *.idb *.aps *.ncb *.obj *.ilk *.opensdf *.sdf *.log *.resources *.lastbuildstate *.pch vc80.idb vc90.idb vc80.pdb vc90.pdb vc100.pdb buildlog.htm mt.dep

@@ -1,0 +1,33 @@
+DIY HeadTracker GUI change log:
+
+Version 1.08 (November 2019 - Alexander ELtsyn - RCGroups 'AE_')
+ - Fixed Windows 10 lockup issue
+ - Fixed saving settings instability due to sporadic Arduino receive buffer overflow
+ - Calibration wizard fix due to suppressed range overflow exception
+ - Other minor bugfixes
+ - UI facelifting to be nicer
+
+Version 1.05 (April 2018 - Chris Stephens - RCGroups 'hangarspace')
+ - Firmware: Implementation of optional bluetooth link between a head-tracker module and an RC receiver module
+ - Extended HT parameters to include new 'bluetooth mode'
+
+Version 1.03 (May 20th, 2013 - Mark Mansur)
+ - Attempting to fix "hardware not found" issue for some users.
+
+Version 1.02 (June 3rd, 2013 - Mark Mansur)
+ - Added retry to version retrieval. Makes for more robust initial connection to tracker.
+ - fixed calibration issue (Magnetometer and Accelerometer offsets are now reset before cal)
+ - new layout for efficiency and clarity
+ - added manual command field. Useful for debugging.
+
+
+Version 1.01 (April 26th, 2013 - Mark Mansur)
+ - added automatic enumeration of COM ports, updated on a timer
+ - added functinality to retrieve device settings on connection
+ - added ability to export/import tracker settings to text file
+ - added calibration wizard
+ - code cleanup, optimization, refactoring, comments
+
+Version 0.08 and earlier (2012 - Dennis Frie):
+ - Initial public releases
+

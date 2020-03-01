@@ -1,0 +1,38 @@
+Version 1.04 (October 31st, 2013 - Mark Mansur)
+- Firmware: Added an option in config.h to enable support for kristaps_r Fatshark goggle HT module (http://www.rcgroups.com/forums/showpost.php?p=23051198&postcount=573)
+- Firmware: Fixed issue where roll settings weren't being persisted/restored
+- Firmware: Fixed issue for PPM-in -> PPM-out being written to the appropriate channel value
+
+- GUI; No changes
+
+Version 1.03 (May 20th, 2013 - Mark Mansur)
+- Firmware: changed format of response to firmware request
+
+- GUI: Attempting to fix "hardware not found" issue for some users.
+
+Version 1.02 (June 3rd, 2013 - Mark Mansur)
+- Firmware: fixed bug (going back to v0.08 and earlier) where mag and acc offset storage didn't reset serial string parser
+
+- GUI: Added retry to version retrieval. Makes for more robust initial connection to tracker.
+- GUI: fixed calibration issue (Magnetometer and Accelerometer offsets are now reset before cal)
+- GUI: new layout for efficiency and clarity
+- GUI: added manual command field. Useful for debugging.
+
+
+Version 1.01 (April 26th, 2013 - Mark Mansur)
+- Firmware: added pause functionality to head tracker
+- Firmware: code cleanup, commenting, refactoring, and optimization
+- Firmware: changed some command structures
+- Firmware: added command to retrieve settings from device
+- Firmware: added version and command to retrieve it
+- Firmware: added command for mag and accel calibration simplicity
+
+- GUI: added automatic enumeration of COM ports, updated on a timer
+- GUI: added functinality to retrieve device settings on connection
+- GUI: added ability to export/import tracker settings to text file
+- GUI: added calibration wizard
+- GUI: code cleanup, optimization, refactoring, comments
+
+Version 0.08 and earlier (2012 - Dennis Frie):
+- Initial public releases
+

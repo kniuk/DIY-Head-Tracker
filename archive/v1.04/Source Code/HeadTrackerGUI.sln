@@ -1,0 +1,24 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HeadTrackerGUI", "HeadTracker_GUI\HeadTrackerGUI.vcxproj", "{C2D36396-62DA-44FF-8EF1-3F3FB7078B84}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HeadtrackerFirmware", "DIY_Headtracker_Firmware\HeadtrackerFirmware.vcxproj", "{6D743D35-01EE-4DE9-B19B-240CF3E146DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C2D36396-62DA-44FF-8EF1-3F3FB7078B84}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C2D36396-62DA-44FF-8EF1-3F3FB7078B84}.Debug|Win32.Build.0 = Debug|Win32
+		{C2D36396-62DA-44FF-8EF1-3F3FB7078B84}.Release|Win32.ActiveCfg = Release|Win32
+		{C2D36396-62DA-44FF-8EF1-3F3FB7078B84}.Release|Win32.Build.0 = Release|Win32
+		{6D743D35-01EE-4DE9-B19B-240CF3E146DA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6D743D35-01EE-4DE9-B19B-240CF3E146DA}.Release|Win32.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
