@@ -70,6 +70,32 @@
 // * Minor code optimizations.
 //
 //-----------------------------------------------------------------------------
+//
+// - 1.09 - March 2020 Jacek Wielogorski (kniuk@data.pl, RCGroups user name 'kniuk')
+//
+// * support for Quanum Head Tracker and older hardware before bluetooth implementation:
+//    -proper button pin assignement can be set via QUANUM_HT_MODULE
+//
+// * Checked and fidled with bluetooth functionality using bare 3.3V Huamao HM10 / HM11 BTLE modules
+//    -see: BT_HM10_HM11 and BT_DISABLE_BY_RESET_PIN
+//
+// * Added support for 3.3V@8MHz Arduino Pro Mini board:
+//    -implemented via MHZ_DIVIDER used in few places in interrupt routines (loading counter values),
+//     all timing remained the same, sacrifing timing precision by factor of 2
+//    -I use 8MHz board for bluetooth receiver to be able to supply HM10 / HM11 bare module from Arduino's onboard 3.3V regulator,
+//     also no need for level shifters on RX/TX pin, all this makes bluetooth receiver more compact in physical dimensions
+//    -8MHz option not tested or recommended for main head tracker, where more computational power is needed!
+//    -when using 8MHz board remember to set proper "Board" target in Arduino IDE
+//
+// * Center/pause button improvements:
+//    -improved button pressed routine in main loop with proper debouncing (BUTTON_DEBOUNCE_DELAY)
+//     (I experienced weard calibration data corruption, which IMHO might have been linked to multiple button presses in short time) 
+//    -bluetooth receiver now can send pause command (long button press)
+//    -acknowledgment of button press implemented, so lost packet with button press can be retransmitted
+//     (BLUETOOTH_RESEND_DELAY and BLUETOOTH_RESEND_COUNT)
+//
+// * Putting the DIY Headtracker project on GitHub to facilitate future development
+//-----------------------------------------------------------------------------
 
 #include <Wire.h>
 #include "config.h"
@@ -115,10 +141,19 @@ char outputTrack = 0;	          // Stream angle data to host
 char outputDbg = 0;             // Stream debug data (call debugOutput() implemented in SensorsXXX to simplify development&debug
 char outputChnl = 0;            // Stream channels output to use with GUI or Serial Plotter. Issue "$CHNLS" and "$CHNLE" command to start/stop outputs
 // Keep track of button press
-char lastButtonState = 0;           // 0 is not pressed, 1 is pressed
-unsigned long buttonDownTime = 0;   // the system time of the press
+char buttonLastState = 0;           // 0 is not pressed, 1 is pressed
+char buttonState = 0;           // 0 is not pressed, 1 is pressed
+unsigned char buttonDownTime = 0;   // time of the press in 16ms units (16ms units used to spare memory)
+unsigned char buttonDebounceTime = 0;  //the last time in 16ms units the output pin was toggled (16ms units used to spare memory)
 char pauseToggled = 0;              // Used to make sure we toggle pause only once per hold
 char ht_paused = 0;
+char BTcenterAck = 1;          //set to 0 if waiting for response from BT headtracker to ackonowledge center command
+char BTpauseAck = 0;           // set to 0 if waiting for response from BT headtracker to ackonowledge pause command
+unsigned char BTresendDelay = 0;  //time in 16ms units after which command is resend due to lack of acknowledge received (16ms units used to spare memory)
+char BTresendCnt = 0;    //how many times command should be resend, each time separated by BTresendDelay ms
+
+char blinkLED = 0;
+char blinkCounter = 0;
 
 // External variables (defined in other files)
 //
@@ -205,11 +240,17 @@ void setup() {
     pinMode(8, INPUT);
 #endif
 
-    // Gang two output pins together to power BT module which enables us to disable it and use USB serial for GUI
+#ifdef BT_DISABLE_BY_RESET_PIN  
+    pinMode(BT_RESET_PIN, OUTPUT);    
+    digitalWrite(BT_RESET_PIN, HIGH); //keep BT at reset
+#else
+// Gang two output pins together to power BT module which enables us to disable it and use USB serial for GUI    
     pinMode(BT_POWER_PIN_1, OUTPUT);
     pinMode(BT_POWER_PIN_2, OUTPUT);
+    
     digitalWrite(BT_POWER_PIN_1, LOW);
     digitalWrite(BT_POWER_PIN_2, LOW);
+#endif
 
     // Set button pin to input:
     pinMode(BUTTON_INPUT, INPUT);
@@ -282,19 +323,46 @@ void setup() {
 #else
         Serial.begin(BLUETOOTH_SERIAL_BAUD);
 #endif
+
+#ifdef BT_DISABLE_BY_RESET_PIN
+        digitalWrite(BT_RESET_PIN, LOW); //unload reset pin of BT module
+#else
         digitalWrite(BT_POWER_PIN_1, HIGH);
         digitalWrite(BT_POWER_PIN_2, HIGH);
+#endif
+
+#ifdef BT_HM10_HM11
+        if (bluetoothMode != BLUETOOTH_MODE_DISABLED) {
+          //delay(2000); // allow module to boot after powerup
+          //Serial.println("AT+BAUD4"); // 57600
+          /*            
+          Query/Set Module Power
+          Send Receive Parameter
+          AT+POWE? OK+Get:[P1] None
+          AT+ POWE [P1] OK+Set:[P1] P1: 0 ~ 3
+          0: -23dbm
+          1: -6dbm
+          2: 0dbm
+          3: 6dbm
+          Default: 2
+           */
+          //Serial.println("AT+POWE3");          
+        }
+        if (bluetoothMode == BLUETOOTH_MODE_TRACKER) {
+          //Serial.println("AT+ROLE1"); // sets HM-10 / HM-11 as main module, capable of autobind to another module running at default settings "AT+RENEW"
+        }
+#endif
     }
 
     // Start PWM interrupt if not sending tracker data over bluetooth
     if (bluetoothMode != BLUETOOTH_MODE_TRACKER) InitPWMInterrupt();         
-
+      InitTimerInterrupt();    // Start timer interrupt (for sensors and button press)
     if (bluetoothMode != BLUETOOTH_MODE_RECEIVER) {
         InitSensors();	// Initialize I2C sensors
         CalibrateMag();
         ResetCenter();
-        InitTimerInterrupt();		// Start timer interrupt (for sensors)
     }
+    InitTimerInterrupt();    // dupa Start timer interrupt (for sensors and button press)
 }
 
 //--------------------------------------------------------------------------------------
@@ -303,42 +371,100 @@ void setup() {
 //--------------------------------------------------------------------------------------
 void loop() {
     // Check input button for reset/pause request
-    char buttonPressed = (digitalRead(BUTTON_INPUT) == 0);
+    char buttonReading = (digitalRead(BUTTON_INPUT) == 0);
+    if(buttonReading != buttonLastState) {
+      buttonDebounceTime = 0;
+      //buttonDownTime = 0;
+    }
 
-    if (buttonPressed && lastButtonState == 0) {
-        if (bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+    if(buttonDebounceTime > BUTTON_DEBOUNCE_DELAY/16){
+      if(buttonState != buttonReading){
+        //change of button state
+        buttonState = buttonReading;
+        if(buttonState == 1){
+            //button pressed - CENTER
+          if (bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
 #ifdef BT_SOFTSERIAL
             btSerial.write('^');
 #else
             Serial.write('^');
 #endif
+            blinkLED = 0;
+            blinkCounter = 0;
+            
+            BTcenterAck = 0;
+            BTpauseAck = 1;
+            BTresendDelay = 0;
+            BTresendCnt = 0;
+          }
+          else {
+            resetValues = 1; //center servos
+          }
+          buttonDownTime = 0;
+          pauseToggled = 0;
+          digitalWrite(ARDUINO_LED, HIGH);         
         }
-
-        resetValues = 1;
-        buttonDownTime = 0;
-        lastButtonState = 1;
-
-        digitalWrite(ARDUINO_LED, HIGH);
+        else {
+          if(!blinkLED) digitalWrite(ARDUINO_LED, LOW);         
+        }
+      }
     }
 
-    if (buttonPressed) {
-        if (!pauseToggled && (buttonDownTime > BUTTON_HOLD_PAUSE_THRESH)) {
-            // Pause/unpause
-            ht_paused = !ht_paused;
-            resetValues = 1;
-            pauseToggled = 1;
+    if (buttonState == 1 && !pauseToggled && buttonDownTime > BUTTON_HOLD_PAUSE_THRESH/16) {
+            //button long pressed - PAUSE
+        if (bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+#ifdef BT_SOFTSERIAL
+          btSerial.write('*');
+#else
+          Serial.write('*');
+#endif      
+          blinkLED = 0;
+          blinkCounter = 0;
+               
+          BTpauseAck = 0;
+          BTcenterAck = 1;
+          BTresendDelay = 0;
+          BTresendCnt = 0;
+        }  
+        else{
+          ht_paused = !ht_paused;
+          resetValues = 1;
         }
-    } else {
-        pauseToggled = 0;
-        lastButtonState = 0;
+        pauseToggled = 1;
+    }
+    
+    buttonLastState = buttonReading;    
 
-        digitalWrite(ARDUINO_LED, LOW);
+    //check if needed to resend command
+    if (bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+      if(BTcenterAck == 0 && BTresendDelay > BLUETOOTH_RESEND_DELAY/16 && BTresendCnt < BLUETOOTH_RESEND_COUNT) {
+        BTresendCnt += 1;
+        blinkLED = 1;
+        BTresendDelay = 0;
+#ifdef BT_SOFTSERIAL
+          btSerial.write('^');
+#else
+          Serial.write('^');
+#endif  
+      }      
+      if(BTpauseAck == 0 && BTresendDelay > BLUETOOTH_RESEND_DELAY/16 && BTresendCnt < BLUETOOTH_RESEND_COUNT) {
+        BTresendCnt += 1;
+        blinkLED = 1;
+        BTresendDelay = 0;
+#ifdef BT_SOFTSERIAL
+          btSerial.write('*');
+#else
+          Serial.write('*');
+#endif  
+      }
     }
 
 #ifdef BT_SOFTSERIAL      //  ****  SoftwareSerial receiver data process  ***
     if (btEnabled == 1 && bluetoothMode == BLUETOOTH_MODE_RECEIVER && btSerial.available()) {
         btSerialDataChar = btSerial.read();
 
+        //TO DO : routine for '^' and '*' commands
+        
         if (btSerialDataChar == '%') {
             btString_started = 0;
             htdata_started = 1;
@@ -447,11 +573,31 @@ void loop() {
             serial_index = 0;
         }
 
-        else if (serialDataChar == '^') {//  remote button pressed
+        else if (serialDataChar == '^') {//  remote button pressed - center
             string_started = 0;
             htdata_started = 0;
             serial_index = 0;
             resetValues = 1;
+            if(bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+              BTcenterAck = 1;  //set ackonwledgement received flag
+            }
+            if(bluetoothMode == BLUETOOTH_MODE_TRACKER) {
+              Serial.write('^'); //send acknowledgement
+            }            
+        }
+
+        else if (serialDataChar == '*') {//  remote button long pressed - pause
+            string_started = 0;
+            htdata_started = 0;
+            serial_index = 0;
+            ht_paused = !ht_paused;
+            resetValues = 1;
+            if(bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+              BTpauseAck = 1;  //set ackonwledgement received flag
+            }
+            if(bluetoothMode == BLUETOOTH_MODE_TRACKER) {
+              Serial.write('*'); //send acknowledgement
+            }
         }
 
         else if (serialDataChar == '%' && bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
@@ -480,7 +626,7 @@ void loop() {
 
                 Serial.println("Channel mapping received");
 
-                // Reset serial_index and serial_started
+                // Reset serial_index and string_started
                 serial_index = 0;
                 string_started = 0;
             }

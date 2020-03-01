@@ -21,8 +21,13 @@ char state = 0; // PPM signal high or Low?
 char read_sensors = 0;
 
 // external variables
-extern unsigned long buttonDownTime;
 extern unsigned char htChannels[];
+extern unsigned char buttonDownTime;
+extern unsigned char buttonDebounceTime;
+extern unsigned char BTresendDelay;
+
+extern char blinkLED;
+extern char blinkCounter;
 
 // Sensor_board,   x,y,z
 int acc_raw[3]  = {1,2,3};  
@@ -72,9 +77,9 @@ void InitPWMInterrupt()
     TCCR1B =
         (1 << ICNC1)| // Input capture noise canceler - set to active 
         (1 << ICES1)| // Input capture edge select. 1 = rising, 0 = falling. We will toggle this, doesn't matter what it starts at        
-        (0 << CS10) | // Prescale 8  
-        (1 << CS11) | // Prescale 8  
-        (0 << CS12) | // Prescale 8
+        (0 << CS10) | // Prescale 8 0
+        (1 << CS11) | // Prescale 8 1  
+        (0 << CS12) | // Prescale 8 0
         (0 << WGM13)|    
         (1 << WGM12); // CTC mode (Clear timer on compare match) with ICR1 as top.           
     
@@ -126,8 +131,8 @@ void InitTimerInterrupt()
         (1 << OCIE0A) |
         (1 << TOIE0);       
 
-    OCR0B = 64 * 2; 
-    OCR0A = 64 * 2;
+    OCR0B = 64 * 2 / MHZ_DIVIDER;
+    OCR0A = 64 * 2 / MHZ_DIVIDER;
 }
 
 //--------------------------------------------------------------------------------------
@@ -157,6 +162,7 @@ ISR(TIMER1_COMPA_vect)
             (0 << COM1B0);   
   
         channel_number = 1;
+        //Serial.println("");
         OCR1A = DEAD_TIME;
   
         TCCR1B &= ~(1 << WGM12);
@@ -180,13 +186,17 @@ ISR(TIMER1_COMPA_vect)
             if ((channel_number-1) % 2 == 1)
             {
                 OCR1A += DEAD_TIME; 
+                //Serial.print(channel_number / 2);
+                //Serial.print(":");
+                //Serial.print(channel_value[channel_number / 2]);
+                //Serial.print(",");
             }
             else
             {
-                OCR1A += channel_value[(channel_number + 1) / 2];
+                OCR1A += channel_value[(channel_number + 1) / 2] / MHZ_DIVIDER;
             }
             channel_number++;
-        }
+        } 
         else
         {
             // We have to use OCR1A as top too, as ICR1 is used for input capture and OCR1B can't be
@@ -234,7 +244,16 @@ ISR(TIMER0_COMPA_vect)
     }
 #endif
     read_sensors = 1;
-    buttonDownTime += 16; // every 16 milliseconds, at 61 hz.
+    buttonDownTime += 1; // every 16 milliseconds, at 61 hz.
+    buttonDebounceTime += 1; // every 16 milliseconds, at 61 hz.
+    BTresendDelay += 1; // every 16 milliseconds, at 61 hz.
+    if (blinkLED){
+      blinkCounter +=1;
+      if(blinkCounter > 250/16) {
+        blinkCounter = 0;
+        digitalWrite(ARDUINO_LED, !digitalRead(ARDUINO_LED));
+      }
+    }
 }
 
 //--------------------------------------------------------------------------------------
@@ -284,16 +303,16 @@ ISR(TIMER1_CAPT_vect)
     
     // Toggle interrupt to detect falling/rising edge:
     TCCR1B ^= (1<<ICES1);
-    
+   
     // Read the time-value stored in ICR1 register (will be the time copied from TCNT1 at input-capture event). 
-    timeRead = ICR1;    
+    timeRead = ICR1 * MHZ_DIVIDER;
     
     pulseTime = timeRead; 
     
     // Check if the timer have reached top/started over:
     if (lastTime > pulseTime)
     {
-        pulseTime += (TOP - lastTime); 
+        pulseTime += (TOP - lastTime); //dupa
     }
     else
     {
