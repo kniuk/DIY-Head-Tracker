@@ -6,3 +6,5 @@ The purpose of this repository is to make stable platform for future development
 Main RCGroups discussion (recommended reading): http://www.rcgroups.com/forums/showthread.php?t=1677559
 
 Colaborators welcome, please feel free to contact me.
+
+Check archive folder for previous versions
