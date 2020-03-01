@@ -1,12 +1,11 @@
 DIY HeadTracker GUI / firmware change log:
 
-Version 1.09 (January 2020 - Jacek Wielogorski - RCGroups 'kniuk')
-- Added support for 8MHz  version for Arduino mini Pro board
-- Added pause support over bluetooth (also tested with HM10/HM11 modules works OK)
+Version 1.09 (March 2020 - Jacek Wielogorski - RCGroups 'kniuk')
+- Added support for 8MHz  version for Arduino mini Pro board (as BT receiver)
+- Added pause support over bluetooth, proper debouncing of the button and retransmission of button press if no acknowledgement
 - Added compile option for Quanum Head Tracker hardware ( pin assignement different than modern recomended setup with BT support)
-- compile options to support HM10/HM11 modules
+- compile options to support HM10/HM11 bluetooth modules
 - (TO DO ) add HM10/HM11 modules to solder instructions 
-- (TO DO ) send BT data every second even if no change or retransmit if lost, button push retransmit if lost
 
 Version 1.08 (November 2019 - Alexander ELtsyn - RCGroups 'AE_')
 - Fixed Windows 10 lockup issue
