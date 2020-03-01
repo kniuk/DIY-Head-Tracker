@@ -3,7 +3,9 @@ Head tracker for RC FPV purposes. Project father: Denis Frie
 
 Please see ChangeLog.txt and .docx files for more info.
 The purpose of this repository is to make stable platform for future development of the great work started by Denis Frie.
-Main RCGroups discussion (recommended reading): http://www.rcgroups.com/forums/showthread.php?t=1677559
+
+## Discussion
+http://www.rcgroups.com/forums/showthread.php?t=1677559
 
 ## Credits (perhaps not all):
 - Dennis Frie - author of the project:  Versions up to 0.08 (2012)
