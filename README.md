@@ -5,7 +5,7 @@ Please see ChangeLog.txt and .docx files for more info.
 The purpose of this repository is to make stable platform for future development of the great work started by Denis Frie.
 Main RCGroups discussion (recommended reading): http://www.rcgroups.com/forums/showthread.php?t=1677559
 
-##Credits (perhaps not all):
+## Credits (perhaps not all):
 - Dennis Frie - author of the project:  Versions up to 0.08 (2012)
 - Mark Mansur : Version 1.02 to 1.04 (2013)
 - Chris Stephens - RCGroups 'hangarspace' : Versions 1.05 and 1.06 (2018)
