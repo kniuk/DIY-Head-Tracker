@@ -1,8 +1,19 @@
 # DIY-Head-Tracker
 Head tracker for RC FPV purposes. Project father: Denis Frie
-
-Please see ChangeLog.txt, HeadTrackerFW.ino and .docx files for more info.
 The purpose of this repository is to make stable platform for future development of the great work started by Denis Frie.
+
+## Basic setup
+Head Tracker (HT) is installed on FPV gogles, weared on your head. It is connected to a trainer port of your RC transmitter and supplied from some power source. It uses from one to three servo channels for: yaw, tilt and rarely for roll.
+In your RC model camera is mounted on gimbal. Gimbal is driven by its servos accordingly to movements of your head.
+There is also an extended version, which uses readily available serial communication Bluetooth modules to get rid of the cable between your head and your RC transmitter.
+
+In this repository you will find:
+- instructions how to build your own HT (.docx files)
+- firmware written in C++ for your HT Arduino board (you will need to compile it and upload using Arduino IDE)
+- Windows app written in C++ to calibrate, setup and test your HT (EXE and sources for Microsoft Visual Studio)
+
+## Version history
+Please see ChangeLog.txt, HeadTrackerFW.ino
 
 ## Discussion
 http://www.rcgroups.com/forums/showthread.php?t=1677559
