@@ -13,7 +13,9 @@ In this repository you will find:
 - Windows app written in C++ to calibrate, setup and test your HT (EXE and sources for Microsoft Visual Studio)
 
 ## Version history
-Please see ChangeLog.txt, HeadTrackerFW.ino
+Please see ChangeLog.txt and HeadTrackerFW.ino
+Pre github versions are archived here:
+https://github.com/kniuk/DIY-Head-Tracker/tree/master/archive
 
 ## Discussion
 http://www.rcgroups.com/forums/showthread.php?t=1677559
@@ -29,6 +31,3 @@ http://www.rcgroups.com/forums/showthread.php?t=1677559
 
 ## Collaboration
 Collaborators welcome, please feel free to contact https://github.com/kniuk
-
-## Archive (previous versions)
-https://github.com/kniuk/DIY-Head-Tracker/tree/master/archive
