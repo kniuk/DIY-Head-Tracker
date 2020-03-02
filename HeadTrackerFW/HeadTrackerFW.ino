@@ -148,7 +148,7 @@ unsigned char buttonDebounceTime = 0;  //the last time in 16ms units the output 
 char pauseToggled = 0;              // Used to make sure we toggle pause only once per hold
 char ht_paused = 0;
 char BTcenterAck = 1;          //set to 0 if waiting for response from BT headtracker to ackonowledge center command
-char BTpauseAck = 0;           // set to 0 if waiting for response from BT headtracker to ackonowledge pause command
+char BTpauseAck = 1;           // set to 0 if waiting for response from BT headtracker to ackonowledge pause command
 unsigned char BTresendDelay = 0;  //time in 16ms units after which command is resend due to lack of acknowledge received (16ms units used to spare memory)
 char BTresendCnt = 0;    //how many times command should be resend, each time separated by BTresendDelay ms
 
@@ -333,7 +333,7 @@ void setup() {
 
 #ifdef BT_HM10_HM11
         if (bluetoothMode != BLUETOOTH_MODE_DISABLED) {
-          //delay(2000); // allow module to boot after powerup
+          //delay(2000); // allow module to boot after powerup Note: only use delay here. This won't work when Timer0 is repurposed later.
           //Serial.println("AT+BAUD4"); // 57600
           /*            
           Query/Set Module Power
@@ -346,7 +346,7 @@ void setup() {
           3: 6dbm
           Default: 2
            */
-          //Serial.println("AT+POWE3");          
+          //Serial.println("AT+POWE2");          
         }
         if (bluetoothMode == BLUETOOTH_MODE_TRACKER) {
           //Serial.println("AT+ROLE1"); // sets HM-10 / HM-11 as main module, capable of autobind to another module running at default settings "AT+RENEW"
@@ -362,7 +362,7 @@ void setup() {
         CalibrateMag();
         ResetCenter();
     }
-    InitTimerInterrupt();    // dupa Start timer interrupt (for sensors and button press)
+    InitTimerInterrupt();    // Start timer interrupt (for sensors and button press)
 }
 
 //--------------------------------------------------------------------------------------
@@ -383,7 +383,7 @@ void loop() {
         buttonState = buttonReading;
         if(buttonState == 1){
             //button pressed - CENTER
-          if (bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+          if (bluetoothMode == BLUETOOTH_MODE_RECEIVER && btEnabled == 1) {
 #ifdef BT_SOFTSERIAL
             btSerial.write('^');
 #else
@@ -412,7 +412,7 @@ void loop() {
 
     if (buttonState == 1 && !pauseToggled && buttonDownTime > BUTTON_HOLD_PAUSE_THRESH/16) {
             //button long pressed - PAUSE
-        if (bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+        if (bluetoothMode == BLUETOOTH_MODE_RECEIVER && btEnabled == 1) {
 #ifdef BT_SOFTSERIAL
           btSerial.write('*');
 #else
@@ -436,7 +436,7 @@ void loop() {
     buttonLastState = buttonReading;    
 
     //check if needed to resend command
-    if (bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
+    if (bluetoothMode == BLUETOOTH_MODE_RECEIVER  && btEnabled == 1) {
       if(BTcenterAck == 0 && BTresendDelay > BLUETOOTH_RESEND_DELAY/16 && BTresendCnt < BLUETOOTH_RESEND_COUNT) {
         BTresendCnt += 1;
         blinkLED = 1;
@@ -581,7 +581,7 @@ void loop() {
             if(bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
               BTcenterAck = 1;  //set ackonwledgement received flag
             }
-            if(bluetoothMode == BLUETOOTH_MODE_TRACKER) {
+            if(bluetoothMode == BLUETOOTH_MODE_TRACKER && btEnabled == 1) {
               Serial.write('^'); //send acknowledgement
             }            
         }
@@ -595,7 +595,7 @@ void loop() {
             if(bluetoothMode == BLUETOOTH_MODE_RECEIVER) {
               BTpauseAck = 1;  //set ackonwledgement received flag
             }
-            if(bluetoothMode == BLUETOOTH_MODE_TRACKER) {
+            if(bluetoothMode == BLUETOOTH_MODE_TRACKER  && btEnabled == 1) {
               Serial.write('*'); //send acknowledgement
             }
         }
@@ -708,7 +708,6 @@ void loop() {
                 htChannels[2] = valuesReceived[19];
                 bluetoothMode = valuesReceived[20];
 
-
                 SaveSettings();
 
                 serial_index = 0;
@@ -728,8 +727,21 @@ void loop() {
                 Serial.println(FIRMWARE_VERSION_FLOAT, 2);
                 serial_index = 0;
                 string_started = 0;
+#ifndef BT_SOFTSERIAL 
+                //"VERS" is one of the first commands issued by GUI software, so we will disable bluetooth data stream to not interfer with the GUI<->BT communication. Note that You will need to reset HT to enable bluetooth again
+                //Please note that holding the button during powerup will also disable bluetooth. This is yet another approach, which doesn't required forward thinking from the user.
+                if(btEnabled == 1){
+                  btEnabled=0;
+#ifdef BT_DISABLE_BY_RESET_PIN
+                  digitalWrite(BT_RESET_PIN, HIGH);
+#else
+                  digitalWrite(BT_POWER_PIN_1, LOW);
+                  digitalWrite(BT_POWER_PIN_2, LOW);
+#endif
+                }    
+#endif
             }
-
+            
             // Hardmware version requested
             else if (IsCommand("HARD")) {
                 Serial.print("HW: ");
@@ -761,7 +773,6 @@ void loop() {
                 serial_index = 0;
                 string_started = 0;
             }
-
 
             // Start magnetometer data stream
             else if (IsCommand("CAST")) {

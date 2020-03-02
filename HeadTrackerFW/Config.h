@@ -32,7 +32,7 @@
 // For BLUETOOTH_MODE_RECEIVER using 8MHZ 3.3V board set to 1. It will allow to use smaller raw BT module without mother PCB with 5V to 3.3V voltage regulator
 // For 3.3V@8MHz Arduino Pro Mini supply RAW pin from 5V SMART Port pin in your radio
 // Pay attention to set in Arduino PC Software: Tools -> Processor -> ATmega328P(3.3V, 8MHz) or ATmega328P(5V, 16MHz) correspondingly
-#define ARDUINO_8MHZ 1
+#define ARDUINO_8MHZ 0
 
 // If you use BT module HM10 or HM11, uncomment init strings to properly set the modules, then comment it again after confrmed that modules work OK
 #define BT_HM10_HM11 1
