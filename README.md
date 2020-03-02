@@ -14,6 +14,7 @@ In this repository you will find:
 
 ## Version history
 Please see ChangeLog.txt and HeadTrackerFW.ino
+
 Pre github versions are archived here:
 https://github.com/kniuk/DIY-Head-Tracker/tree/master/archive
 
