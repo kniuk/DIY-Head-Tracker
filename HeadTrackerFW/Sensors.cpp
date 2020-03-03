@@ -111,15 +111,15 @@ float tiltRollBeta = 0.75;
 float panBeta = 0.75;
 float gyroWeightTiltRoll = 0.98;
 float GyroWeightPan = 0.98;
-int servoPanCenter = 2100;
+int servoPanCenter = 2100; //2100digs + 900digs of dead time = 3000digs (1500us) = standard servo center pulse
 int servoTiltCenter = 2100;
 int servoRollCenter = 2100;
-int panMaxPulse = 1050; //dupa
-int panMinPulse = 1050; //dupa
-int tiltMaxPulse = 1050; //dupa
-int tiltMinPulse = 1050; //dupa
-int rollMaxPulse = 1050; //dupa
-int rollMinPulse = 1050; //dupa
+int panMaxPulse = 1150; //1150digs = 575us = 115% of standard servo throw
+int panMinPulse = 1150;
+int tiltMaxPulse = 1150;
+int tiltMinPulse = 1150;
+int rollMaxPulse = 1150;
+int rollMinPulse = 1150;
 float panFactor = 17;
 float tiltFactor = 17;
 float rollFactor = 17;
@@ -536,7 +536,7 @@ void InitSensors()
 
     ReadFromI2C(ITG3205_ADDR, 0x00, 1);
     ITG3205_ID = sensorBuffer[0];
- 
+
 #if (DEBUG)    
     Serial.print("ITG3205: ");
     Serial.print(sensorBuffer[0]);

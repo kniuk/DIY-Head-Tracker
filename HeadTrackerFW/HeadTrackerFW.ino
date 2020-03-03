@@ -94,6 +94,18 @@
 //    -acknowledgment of button press implemented, so lost packet with button press can be retransmitted
 //     (BLUETOOTH_RESEND_DELAY and BLUETOOTH_RESEND_COUNT)
 //
+// * Halt bluetooth stream to enable communication with GUI
+//    -added feature that stops bluetooth communication and switches off bluetooth module when $VERS command is received,
+//     (works parallel to existing way of disabling bluetooth by button press on powerup)
+//
+// * Fixed center pulse/servo position:
+//    -it was 1450us instead of 1500us (DEAD_TIME changed from 800 to 900)
+//    -in PPM stream pulse length correspondig to servo pulse length consist of DEAD_TIME + channel_value which is 3000digs
+//     for neutral servo position of 1500us
+//
+// * Fixed negative PPM shift generation:
+//    -it was broken due to bad Timer1 config in Timer1 interrupt routine
+//
 // * Putting the DIY Headtracker project on GitHub to facilitate future development
 //-----------------------------------------------------------------------------
 
@@ -152,7 +164,7 @@ char BTpauseAck = 1;           // set to 0 if waiting for response from BT headt
 unsigned char BTresendDelay = 0;  //time in 16ms units after which command is resend due to lack of acknowledge received (16ms units used to spare memory)
 char BTresendCnt = 0;    //how many times command should be resend, each time separated by BTresendDelay ms
 
-char blinkLED = 0;
+char blinkLED = 0;  //blink the LED - used for debugging, set to 1 to blink, 0 to stop blinking
 char blinkCounter = 0;
 
 // External variables (defined in other files)
@@ -197,7 +209,6 @@ extern int I2CPresent;
 int lastPan = 0;
 int lastTilt = 0;
 int btEnabled = 0;
-int remoteButtonPressed = 0;
 char serialDataChar = ' ';
 
 #ifdef BT_SOFTSERIAL
@@ -389,7 +400,7 @@ void loop() {
 #else
             Serial.write('^');
 #endif
-            blinkLED = 0;
+            blinkLED = 0; //stop show occured retransmission, because next button command is issued
             blinkCounter = 0;
             
             BTcenterAck = 0;
@@ -418,7 +429,7 @@ void loop() {
 #else
           Serial.write('*');
 #endif      
-          blinkLED = 0;
+          blinkLED = 0; //stop show occured retransmission, because next button command is issued
           blinkCounter = 0;
                
           BTpauseAck = 0;
@@ -439,7 +450,7 @@ void loop() {
     if (bluetoothMode == BLUETOOTH_MODE_RECEIVER  && btEnabled == 1) {
       if(BTcenterAck == 0 && BTresendDelay > BLUETOOTH_RESEND_DELAY/16 && BTresendCnt < BLUETOOTH_RESEND_COUNT) {
         BTresendCnt += 1;
-        blinkLED = 1;
+        blinkLED = 1; //show the world that retransmission occured
         BTresendDelay = 0;
 #ifdef BT_SOFTSERIAL
           btSerial.write('^');
@@ -449,7 +460,7 @@ void loop() {
       }      
       if(BTpauseAck == 0 && BTresendDelay > BLUETOOTH_RESEND_DELAY/16 && BTresendCnt < BLUETOOTH_RESEND_COUNT) {
         BTresendCnt += 1;
-        blinkLED = 1;
+        blinkLED = 1; //show the world that retransmission occured
         BTresendDelay = 0;
 #ifdef BT_SOFTSERIAL
           btSerial.write('*');
@@ -730,7 +741,8 @@ void loop() {
 #ifndef BT_SOFTSERIAL 
                 //"VERS" is one of the first commands issued by GUI software, so we will disable bluetooth data stream to not interfer with the GUI<->BT communication. Note that You will need to reset HT to enable bluetooth again
                 //Please note that holding the button during powerup will also disable bluetooth. This is yet another approach, which doesn't required forward thinking from the user.
-                if(btEnabled == 1){
+                //Will work only if BLUETOOTH_SERIAL_BAUD == SERIAL_BAUD
+                if(btEnabled == 1 && BLUETOOTH_SERIAL_BAUD == SERIAL_BAUD){
                   btEnabled=0;
 #ifdef BT_DISABLE_BY_RESET_PIN
                   digitalWrite(BT_RESET_PIN, HIGH);

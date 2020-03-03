@@ -5,6 +5,8 @@ Version 1.09 (March 2020 - Jacek Wielogorski - RCGroups 'kniuk')
 - Added pause support over bluetooth, proper debouncing of the button and retransmission of button press if no acknowledgement
 - Added compile option for Quanum Head Tracker hardware ( pin assignement different than modern recomended setup with BT support)
 - compile options to support HM10/HM11 bluetooth modules
+- fixed center pulse/servo position: it was 1450us instead of 1500us
+- some minor tweaks (see description in .ino file)
 - (TO DO ) add HM10/HM11 modules to solder instructions 
 
 Version 1.08 (November 2019 - Alexander ELtsyn - RCGroups 'AE_')

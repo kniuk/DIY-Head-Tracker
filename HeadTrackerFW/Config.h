@@ -76,8 +76,8 @@
 // Number of PPM channels out. 1 - 12 channels supported. 
 #define NUMBER_OF_CHANNELS 8
 
-// Define for extra debug serial info
-//#define DEBUG 0
+// set to 1 for extra debug serial info
+#define DEBUG 0
 
 // Output serial data to host every X frames
 #define SERIAL_OUTPUT_FRAME_INTERVAL    10
@@ -85,16 +85,16 @@
 // Serial communication speed. 
 #define SERIAL_BAUD 57600
 
-#define BLUETOOTH_SERIAL_BAUD 57600  //57600 appears to be max for SoftwareSerial, otherwise 115200 OK
+#define BLUETOOTH_SERIAL_BAUD 57600  //57600 appears to be max for SoftwareSerial, otherwise 115200 OK, set equal to SERIAL_BAUD if you want to have automatic bt communication off when hooked up to GUI
 
 #if ARDUINO_8MHZ
-  #define MHZ_DIVIDER 2
+  #define MHZ_DIVIDER 2 //divides all timer loads by two when CPU speed 2 times slower, sacrifices precision of pulse generation to 1us (it is 0.5us for 16MHz clock)
 #else
   #define MHZ_DIVIDER 1
 #endif
 
-// Dead-time between each channel in the PPM-stream. 
-#define DEAD_TIME 900 / MHZ_DIVIDER //it was 800, perhaps 2100+900 = 3000/2 = 1500us
+// Dead-time is a sync part of each channels' pulse length in the PPM-stream. 
+#define DEAD_TIME 900 / MHZ_DIVIDER //900digs = 450us (standard PPM pulse is around 500us), with neutral 2100 digs it gives 3000digs = 1500us - standard neutral servo pulse
 
 // Sets the frame-length .
 #define FRAME_LENGTH (unsigned int)((5000L + NUMBER_OF_CHANNELS * 5000L) / MHZ_DIVIDER)
@@ -142,8 +142,8 @@
 #define BLUETOOTH_MODE_TRACKER 1
 #define BLUETOOTH_MODE_RECEIVER 2
 
-#define BLUETOOTH_RESEND_DELAY    250    // used on Bluetooth receiver: milis to wait for acknowledgement before retransmitting command
-#define BLUETOOTH_RESEND_COUNT    2    // used on Bluetooth receiver: how many times to retransmit command before giving up
+#define BLUETOOTH_RESEND_DELAY    200    // used on Bluetooth receiver: milis to wait for acknowledgement before retransmitting command
+#define BLUETOOTH_RESEND_COUNT    3    // used on Bluetooth receiver: how many times to retransmit command before giving up
 #define BUTTON_DEBOUNCE_DELAY 50  //button debounce time
 
 #endif
