@@ -32,4 +32,4 @@ http://www.rcgroups.com/forums/showthread.php?t=1677559
 - Jacek Wielogorski - RCGroups 'kniuk' : Version 1.09 (2020)
 
 ## Collaboration
-Collaborators welcome, please feel free to contact https://github.com/kniuk
+Collaborators welcome, please feel free to contact kniuk@data.pl
